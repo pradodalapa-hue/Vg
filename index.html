@@ -1,0 +1,154 @@
+<!DOCTYPE html><html lang="pt-br"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><link rel="manifest" href="manifest.json"><title>SISTEMA JDP</title><style>
+                    body { background:#000; color:#0f0; font-family:monospace; margin:0; padding: 20px; overflow-y:auto; box-sizing: border-box; min-height: 100vh; display: flex; flex-direction: column; }
+                    #term { width:100%; text-align:left; font-size:16px; color:#0f0; text-shadow:0 0 5px #0f0; line-height: 1.5; flex-grow: 1; }
+                    .error-line { color: #ff3333; text-shadow: 0 0 5px #ff3333; font-weight: bold; }
+                    .success-line { color: #00ff88; text-shadow: 0 0 5px #00ff88; }
+                    #muralha { display:none; text-align:center; animation: fadeIn 2s; margin: auto; }
+                    .logo { width:150px; filter:drop-shadow(0 0 10px #bf953f); margin-bottom:20px; }
+                    .btn-w { display:inline-block; margin-top:20px; padding:15px 30px; background:#25d366; color:#fff; text-decoration:none; border-radius:5px; font-weight:bold; font-family:sans-serif; }
+                    @keyframes fadeIn { from {opacity:0} to {opacity:1} }
+                </style></head><body>
+                <div id="term"></div>
+                <div id="muralha">
+                    <img class="logo" src="https://raw.githubusercontent.com/pradodalapa-hue/fotos-industrial/main/img/jdp_1777000164292_icon_512_1_.png">
+                    <h2 style="color:#bf953f">ACESSO BLOQUEADO</h2>
+                    <p style="color:#fff; font-family:sans-serif;">ESTE DISPOSITIVO FOI IDENTIFICADO E BLOQUEADO.</p>
+                    <a href="https://wa.me/5592984846058" class="btn-w">FALAR COM MESTRE JOSÉ</a>
+                </div>
+                <script>
+                    const C = { id:'JDP_TURBO', k:'SkRQX1RVUkJPXzE3', d:'pradodalapa-hue.github.io' };
+                    const t = document.getElementById('term');
+                    const m = document.getElementById('muralha');
+
+                    function writeTerm(text, className = '') {
+                        const div = document.createElement('div');
+                        if(className) div.className = className;
+                        div.innerHTML = text;
+                        t.appendChild(div);
+                        window.scrollTo(0, document.body.scrollHeight);
+                    }
+
+                    async function type(lines, className = '') {
+                        for(let line of lines) {
+                            let currentText = "";
+                            const div = document.createElement('div');
+                            if(className) div.className = className;
+                            t.appendChild(div);
+                            for(let i=0; i<line.length; i++) {
+                                currentText += line.charAt(i);
+                                div.innerHTML = currentText;
+                                await new Promise(r => setTimeout(r, 20));
+                            }
+                            await new Promise(r => setTimeout(r, 300));
+                        }
+                    }
+
+                    function showMuralha() {
+                        setTimeout(() => {
+                            t.style.display = 'none';
+                            m.style.display = 'block';
+                        }, 1000);
+                    }
+
+                    function base64ToUint8Array(base64) {
+                        const binaryString = atob(base64);
+                        const len = binaryString.length;
+                        const bytes = new Uint8Array(len);
+                        for (let i = 0; i < len; i++) {
+                            bytes[i] = binaryString.charCodeAt(i);
+                        }
+                        return bytes;
+                    }
+
+                    async function deriveKey(password, salt) {
+                        const encoder = new TextEncoder();
+                        const baseKey = await crypto.subtle.importKey("raw", encoder.encode(password), "PBKDF2", false, ["deriveKey"]);
+                        return crypto.subtle.deriveKey(
+                            { name: "PBKDF2", salt: salt, iterations: 100000, hash: "SHA-256" },
+                            baseKey,
+                            { name: "AES-GCM", length: 256 },
+                            false,
+                            ["decrypt"]
+                        );
+                    }
+
+                    async function decryptPayload(encryptedObj, password) {
+                        const decoder = new TextDecoder();
+                        const ciphertext = base64ToUint8Array(encryptedObj.ciphertext);
+                        const iv = base64ToUint8Array(encryptedObj.iv);
+                        const salt = base64ToUint8Array(encryptedObj.salt);
+                        
+                        const key = await deriveKey(password, salt);
+                        const decrypted = await crypto.subtle.decrypt(
+                            { name: "AES-GCM", iv: iv },
+                            key,
+                            ciphertext
+                        );
+                        return decoder.decode(decrypted);
+                    }
+
+                    async function validar() {
+                        writeTerm("&gt; INICIANDO KERNEL TRADUTOR JDP v16.5-SECURE...");
+                        await new Promise(r => setTimeout(r, 500));
+                        
+                        if(window.location.hostname !== C.d) { 
+                            await type([
+                                "&gt; ERRO CRÍTICO: VIOLAÇÃO DE DOMÍNIO!",
+                                "&gt; ACESSO REJEITADO PELO SERVIDOR CENTRAL JDP.",
+                                "&gt; RASTREANDO IP DO INVASOR..."
+                            ], "error-line"); 
+                            showMuralha(); 
+                            return; 
+                        }
+
+                        try {
+                            writeTerm("&gt; CONECTANDO AO SERVIDOR DE LICENÇAS CENTRAL...");
+                            const r = await fetch('https://raw.githubusercontent.com/pradodalapa-hue/Tetstserbidor/main/clientes.json?t='+Date.now());
+                            if(!r.ok) throw new Error("Servidor fora do ar");
+                            
+                            const d = await r.json();
+                            const u = d.find(i => i.id === C.id && i.apiKey === C.k);
+                            
+                            if(u && u.status === 'ativo') {
+                                writeTerm("&gt; CHAVE CORRETA. BAIXANDO PACKET CRIPTOGRAFADO...", "success-line");
+                                const r2 = await fetch('https://raw.githubusercontent.com/pradodalapa-hue/Tetstserbidor/main/' + u.path + 'payload.json');
+                                const encryptedPayloadObj = await r2.json();
+                                
+                                writeTerm("&gt; TRADUZINDO COFRE DE SEGURANÇA (AES-256-GCM)...");
+                                await new Promise(r => setTimeout(r, 400));
+                                
+                                try {
+                                    const decryptedHtml = await decryptPayload(encryptedPayloadObj, C.k);
+                                    writeTerm("&gt; TRADUÇÃO COMPLETA. INICIANDO INTERRUPÇÃO DA CASCA...", "success-line");
+                                    await new Promise(r => setTimeout(r, 300));
+                                    
+                                    document.open(); 
+                                    document.write(decryptedHtml); 
+                                    document.close();
+                                } catch(decError) {
+                                    await type([
+                                        "&gt; ERRO INTERNO: FALHA DE INTEGRIDADE DA CHAVE SIMÉTRICA!",
+                                        "&gt; CHAVE INCORRETA OU ARQUIVO CORROMPIDO!",
+                                        "&gt; SISTEMA DE BLOQUEIO ATIVADO PELO OPERADOR SUPREMO JOSÉ."
+                                    ], "error-line");
+                                    showMuralha();
+                                }
+                            } else { 
+                                await type([
+                                    "&gt; ERRO DE LICENÇA: CLIENTE INATIVO OU CHAVE DE ACESSO REVOGADA!",
+                                    "&gt; CONTATE O OPERADOR SUPREMO."
+                                ], "error-line");
+                                showMuralha(); 
+                            }
+                        } catch(e) { 
+                            await type([
+                                "&gt; ERRO CRÍTICO DE CONEXÃO COM O GITHUB!",
+                                "&gt; IMPOSSÍVEL VERIFICAR STATUS DA LICENÇA ONLINE."
+                            ], "error-line");
+                            showMuralha(); 
+                        }
+                    }
+
+                    if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+                    validar();
+                </script></body></html>
